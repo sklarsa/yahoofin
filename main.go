@@ -14,13 +14,28 @@ import (
 
 func main() {
 	tickerPtr := flag.String("ticker", "", "Ticker to pull prices for")
+	startDatePtr := flag.String("startDate", "", "Start date [YYYY-MM-DD]")
+	endDatePtr := flag.String("endDate", "", "End date [YYYY-MM-DD]")
 	flag.Parse()
+
+	const dateFmt = "2006-01-02"
 
 	client, err := NewClient()
 	if err != nil {
 		panic(err)
 	}
-	resp, err := client.GetSecurityData(*tickerPtr, time.Date(2017, time.January, 1, 0, 0, 0, 0, time.UTC), time.Date(2017, time.March, 30, 0, 0, 0, 0, time.UTC))
+
+	startDate, err := time.Parse(dateFmt, *startDatePtr)
+	if err != nil {
+		panic(err)
+	}
+
+	endDate, err := time.Parse(dateFmt, *endDatePtr)
+	if err != nil {
+		panic(err)
+	}
+
+	resp, err := client.GetSecurityData(*tickerPtr, startDate, endDate)
 	fmt.Println(resp)
 }
 
