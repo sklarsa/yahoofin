@@ -10,6 +10,8 @@ import (
 	"os"
 	"regexp"
 	"time"
+
+	"github.com/gocarina/gocsv"
 )
 
 func main() {
@@ -44,8 +46,12 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	resp, err := client.GetSecurityDataString(*tickerPtr, startDate, endDate)
+	//resp, err := client.GetSecurityDataString(*tickerPtr, startDate, endDate)
+	//fmt.Println(resp)
+
+	resp, err := client.GetSecurityData(*tickerPtr, startDate, endDate)
 	fmt.Println(resp)
+	fmt.Println(err)
 }
 
 // NewClient creates a new Yahoo Finance client
@@ -79,6 +85,17 @@ type Client struct {
 	HTTPClient *http.Client
 }
 
+// Price represents a single datapoint returned by the yahoo api
+type Price struct {
+	Date     DateTime `csv:"Date"`
+	Open     float64  `csv:"Open"`
+	High     float64  `csv:"High"`
+	Low      float64  `csv:"Low"`
+	Close    float64  `csv:"Close"`
+	AdjClose float64  `csv:"Adj Close"`
+	Volume   float64  `csv:"Volume"`
+}
+
 // GetSecurityDataString returns the raw response data from the yahoo endpoint.
 // This string will be CSV formatted if the request succeeds.
 // In the event of a failed request, this string will be JSON-formatted
@@ -96,6 +113,36 @@ func (c *Client) GetSecurityDataString(ticker string, startDate, endDate time.Ti
 	}
 	return string(body), nil
 
+}
+
+func (c *Client) GetSecurityData(ticker string, startDate, endDate time.Time) ([]*Price, error) {
+	prices := []*Price{}
+	urlFmtStr := "https://query1.finance.yahoo.com/v7/finance/download/%s?period1=%d&period2=%d&interval=1d&events=history&crumb=%s"
+	url := fmt.Sprintf(urlFmtStr, ticker, startDate.Unix(), endDate.Unix(), c.Crumb)
+	resp, err := c.HTTPClient.Get(url)
+	if err != nil {
+		return prices, err
+	}
+
+	if err := gocsv.Unmarshal(resp.Body, &prices); err != nil {
+		return prices, err
+	}
+
+	return prices, nil
+
+}
+
+type DateTime struct {
+	time.Time
+}
+
+// Convert the CSV string as internal date
+func (date *DateTime) UnmarshalCSV(csv string) (err error) {
+	date.Time, err = time.Parse("2006-02-01", csv)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func getCrumb(client *http.Client, ticker string) (string, error) {
