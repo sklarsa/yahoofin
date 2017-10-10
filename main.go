@@ -58,16 +58,16 @@ func NewClient() (*Client, error) {
 		return nil, err
 	}
 	httpClient := &http.Client{Jar: jar}
-	c := Client{HTTPClient: httpClient}
+	c := Client{httpClient: httpClient}
 
 	i := rand.Intn(len(seedTickers))
 	ticker := seedTickers[i]
-	crumb, err := getCrumb(c.HTTPClient, ticker)
+	crumb, err := getCrumb(c.httpClient, ticker)
 	if err != nil {
 		return nil, err
 	}
 
-	c.Crumb = crumb
+	c.crumb = crumb
 
 	return &c, nil
 
@@ -75,10 +75,10 @@ func NewClient() (*Client, error) {
 
 // Client is a struct that represents a Yahoo Finance client
 type Client struct {
-	// Crumb is sent along with each request and is needed to make successful requests directly to the historical prices endpoint
-	Crumb string
-	// HTTPClient is a persistent client used to store cookies after the initial request is sent
-	HTTPClient *http.Client
+	// crumb is sent along with each request and is needed to make successful requests directly to the historical prices endpoint
+	crumb string
+	// httpClient is a persistent client used to store cookies after the initial request is sent
+	httpClient *http.Client
 }
 
 // Price represents a single datapoint returned by the yahoo api
@@ -97,8 +97,8 @@ type Price struct {
 // In the event of a failed request, this string will be JSON-formatted
 func (c *Client) GetSecurityDataString(ticker string, startDate, endDate time.Time) (string, error) {
 	urlFmtStr := "https://query1.finance.yahoo.com/v7/finance/download/%s?period1=%d&period2=%d&interval=1d&events=history&crumb=%s"
-	url := fmt.Sprintf(urlFmtStr, ticker, startDate.Unix(), endDate.Unix(), c.Crumb)
-	resp, err := c.HTTPClient.Get(url)
+	url := fmt.Sprintf(urlFmtStr, ticker, startDate.Unix(), endDate.Unix(), c.crumb)
+	resp, err := c.httpClient.Get(url)
 	if err != nil {
 		return "", err
 	}
@@ -115,8 +115,8 @@ func (c *Client) GetSecurityDataString(ticker string, startDate, endDate time.Ti
 func (c *Client) GetSecurityData(ticker string, startDate, endDate time.Time) ([]*Price, error) {
 	prices := []*Price{}
 	urlFmtStr := "https://query1.finance.yahoo.com/v7/finance/download/%s?period1=%d&period2=%d&interval=1d&events=history&crumb=%s"
-	url := fmt.Sprintf(urlFmtStr, ticker, startDate.Unix(), endDate.Unix(), c.Crumb)
-	resp, err := c.HTTPClient.Get(url)
+	url := fmt.Sprintf(urlFmtStr, ticker, startDate.Unix(), endDate.Unix(), c.crumb)
+	resp, err := c.httpClient.Get(url)
 	if err != nil {
 		return prices, err
 	}
