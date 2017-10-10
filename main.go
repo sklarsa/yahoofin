@@ -46,12 +46,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	//resp, err := client.GetSecurityDataString(*tickerPtr, startDate, endDate)
-	//fmt.Println(resp)
-
-	resp, err := client.GetSecurityData(*tickerPtr, startDate, endDate)
+	resp, err := client.GetSecurityDataString(*tickerPtr, startDate, endDate)
 	fmt.Println(resp)
-	fmt.Println(err)
 }
 
 // NewClient creates a new Yahoo Finance client
@@ -115,6 +111,7 @@ func (c *Client) GetSecurityDataString(ticker string, startDate, endDate time.Ti
 
 }
 
+// GetSecurityData returns a slice of pointers to Price structs, based on the data received from yahoo
 func (c *Client) GetSecurityData(ticker string, startDate, endDate time.Time) ([]*Price, error) {
 	prices := []*Price{}
 	urlFmtStr := "https://query1.finance.yahoo.com/v7/finance/download/%s?period1=%d&period2=%d&interval=1d&events=history&crumb=%s"
@@ -132,13 +129,14 @@ func (c *Client) GetSecurityData(ticker string, startDate, endDate time.Time) ([
 
 }
 
+// DateTime is a custom implementation of time.Time used to unmarshal yahoo csv data
 type DateTime struct {
 	time.Time
 }
 
-// Convert the CSV string as internal date
+// UnmarshalCSV sonverts the CSV string as internal date
 func (date *DateTime) UnmarshalCSV(csv string) (err error) {
-	date.Time, err = time.Parse("2006-02-01", csv)
+	date.Time, err = time.Parse("2006-01-02", csv)
 	if err != nil {
 		return err
 	}
