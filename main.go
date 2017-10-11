@@ -92,13 +92,17 @@ type Price struct {
 	Volume   float64  `csv:"Volume"`
 }
 
+func (c *Client) makeRequest(ticker string, startDate, endDate time.Time) (*http.Response, error) {
+	urlFmtStr := "https://query1.finance.yahoo.com/v7/finance/download/%s?period1=%d&period2=%d&interval=1d&events=history&crumb=%s"
+	url := fmt.Sprintf(urlFmtStr, ticker, startDate.Unix(), endDate.Unix(), c.crumb)
+	return c.httpClient.Get(url)
+}
+
 // GetSecurityDataString returns the raw response data from the yahoo endpoint.
 // This string will be CSV formatted if the request succeeds.
 // In the event of a failed request, this string will be JSON-formatted
 func (c *Client) GetSecurityDataString(ticker string, startDate, endDate time.Time) (string, error) {
-	urlFmtStr := "https://query1.finance.yahoo.com/v7/finance/download/%s?period1=%d&period2=%d&interval=1d&events=history&crumb=%s"
-	url := fmt.Sprintf(urlFmtStr, ticker, startDate.Unix(), endDate.Unix(), c.crumb)
-	resp, err := c.httpClient.Get(url)
+	resp, err := c.makeRequest(ticker, startDate, endDate)
 	if err != nil {
 		return "", err
 	}
@@ -114,9 +118,7 @@ func (c *Client) GetSecurityDataString(ticker string, startDate, endDate time.Ti
 // GetSecurityData returns a slice of pointers to Price structs, based on the data received from yahoo
 func (c *Client) GetSecurityData(ticker string, startDate, endDate time.Time) ([]*Price, error) {
 	prices := []*Price{}
-	urlFmtStr := "https://query1.finance.yahoo.com/v7/finance/download/%s?period1=%d&period2=%d&interval=1d&events=history&crumb=%s"
-	url := fmt.Sprintf(urlFmtStr, ticker, startDate.Unix(), endDate.Unix(), c.crumb)
-	resp, err := c.httpClient.Get(url)
+	resp, err := c.makeRequest(ticker, startDate, endDate)
 	if err != nil {
 		return prices, err
 	}
