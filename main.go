@@ -9,6 +9,7 @@ import (
 	"net/http/cookiejar"
 	"os"
 	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/gocarina/gocsv"
@@ -146,28 +147,36 @@ func (date *DateTime) UnmarshalCSV(csv string) (err error) {
 }
 
 func getCrumb(client *http.Client, ticker string) (string, error) {
+	crumb := ""
 	url := fmt.Sprintf("https://finance.yahoo.com/quote/%s", ticker)
 	resp, err := client.Get(url)
 	if err != nil {
-		return "", err
+		return crumb, err
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return "", err
+		return crumb, err
 	}
 
 	crumbRe, err := regexp.Compile(`"CrumbStore":{"crumb":"([^"]+)"\}`)
 	if err != nil {
-		return "", err
+		return crumb, err
 	}
 
 	matches := crumbRe.FindAllStringSubmatch(string(body), 1)
 
 	if len(matches) > 0 {
-		return matches[0][1], nil
+		crumb = matches[0][1]
 	}
 
-	return "", nil
+	if len(crumb) > 0 {
+		crumb, err = strconv.Unquote(`"` + crumb + `"`)
+		if err != nil {
+			return crumb, err
+		}
+	}
+
+	return crumb, nil
 
 }
