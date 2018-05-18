@@ -1,4 +1,4 @@
-package main
+package yahoofin
 
 import (
 	"encoding/csv"

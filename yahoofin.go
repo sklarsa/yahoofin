@@ -1,55 +1,17 @@
-package main
+package yahoofin
 
 import (
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"net/http/cookiejar"
-	"os"
 	"regexp"
 	"strconv"
 	"time"
 
 	"github.com/gocarina/gocsv"
 )
-
-func main() {
-	tickerPtr := flag.String("ticker", "", "Ticker to pull prices for")
-	startDatePtr := flag.String("startDate", "", "Start date [YYYY-MM-DD]")
-	endDatePtr := flag.String("endDate", "", "End date [YYYY-MM-DD]")
-	flag.Parse()
-
-	if *tickerPtr == "" {
-		fmt.Println("Must provide a ticker")
-		flag.Usage()
-		os.Exit(1)
-	}
-
-	const dateFmt = "2006-01-02"
-
-	startDate, err := time.Parse(dateFmt, *startDatePtr)
-	if err != nil {
-		fmt.Println(err)
-		flag.Usage()
-		os.Exit(1)
-	}
-
-	endDate, err := time.Parse(dateFmt, *endDatePtr)
-	if err != nil {
-		fmt.Println(err)
-		flag.Usage()
-		os.Exit(1)
-	}
-
-	client, err := NewClient()
-	if err != nil {
-		panic(err)
-	}
-	resp, err := client.GetSecurityDataString(*tickerPtr, startDate, endDate)
-	fmt.Println(resp)
-}
 
 // NewClient creates a new Yahoo Finance client
 func NewClient() (*Client, error) {
