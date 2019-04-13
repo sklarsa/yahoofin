@@ -1,3 +1,0 @@
-package: bitbucket.org/sklarsa/yahoofin
-import:
-- package: github.com/gocarina/gocsv
