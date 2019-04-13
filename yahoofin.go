@@ -55,17 +55,29 @@ type Price struct {
 	Volume   float64  `csv:"Volume"`
 }
 
-func (c *Client) makeRequest(ticker string, startDate, endDate time.Time) (*http.Response, error) {
-	urlFmtStr := "https://query1.finance.yahoo.com/v7/finance/download/%s?period1=%d&period2=%d&interval=1d&events=history&crumb=%s"
-	url := fmt.Sprintf(urlFmtStr, ticker, startDate.Unix(), endDate.Unix(), c.crumb)
+// Field represents the type of data that is being requested from the yahoo api
+type Field string
+
+const (
+	// History will return historical prices
+	History Field = "history"
+	// Dividend will return dividend payment history
+	Dividend Field = "dividend"
+	// Split will return stock split data
+	Split Field = "split"
+)
+
+func (c *Client) makeRequest(ticker string, startDate, endDate time.Time, field Field) (*http.Response, error) {
+	urlFmtStr := "https://query1.finance.yahoo.com/v7/finance/download/%s?period1=%d&period2=%d&interval=1d&events=%s&crumb=%s"
+	url := fmt.Sprintf(urlFmtStr, ticker, startDate.Unix(), endDate.Unix(), field, c.crumb)
 	return c.httpClient.Get(url)
 }
 
 // GetSecurityDataString returns the raw response data from the yahoo endpoint.
 // This string will be CSV formatted if the request succeeds.
 // In the event of a failed request, this string will be JSON-formatted
-func (c *Client) GetSecurityDataString(ticker string, startDate, endDate time.Time) (string, error) {
-	resp, err := c.makeRequest(ticker, startDate, endDate)
+func (c *Client) GetSecurityDataString(ticker string, startDate, endDate time.Time, field Field) (string, error) {
+	resp, err := c.makeRequest(ticker, startDate, endDate, field)
 	if err != nil {
 		return "", err
 	}
@@ -79,9 +91,9 @@ func (c *Client) GetSecurityDataString(ticker string, startDate, endDate time.Ti
 }
 
 // GetSecurityData returns a slice of pointers to Price structs, based on the data received from yahoo
-func (c *Client) GetSecurityData(ticker string, startDate, endDate time.Time) ([]*Price, error) {
+func (c *Client) GetSecurityData(ticker string, startDate, endDate time.Time, field Field) ([]*Price, error) {
 	prices := []*Price{}
-	resp, err := c.makeRequest(ticker, startDate, endDate)
+	resp, err := c.makeRequest(ticker, startDate, endDate, field)
 	if err != nil {
 		return prices, err
 	}

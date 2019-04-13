@@ -41,6 +41,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	resp, err := client.GetSecurityDataString(*tickerPtr, startDate, endDate)
+	resp, err := client.GetSecurityDataString(*tickerPtr, startDate, endDate, yahoofin.History)
 	fmt.Println(resp)
 }
