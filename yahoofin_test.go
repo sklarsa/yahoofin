@@ -21,7 +21,7 @@ func TestClient(t *testing.T) {
 
 	for _, field := range fields {
 
-		csvString, err := client.GetSecurityDataString(ticker, startDate, endDate, History)
+		csvString, err := client.GetSecurityDataString(ticker, startDate, endDate, field)
 		if err != nil {
 			t.Error(err)
 		}
