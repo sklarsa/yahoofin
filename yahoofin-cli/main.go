@@ -42,5 +42,10 @@ func main() {
 		panic(err)
 	}
 	resp, err := client.GetSecurityDataString(*tickerPtr, startDate, endDate, yahoofin.History)
-	fmt.Println(resp)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println(resp)
+	}
+
 }
