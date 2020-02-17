@@ -42,6 +42,8 @@ type Client struct {
 	crumb string
 	// httpClient is a persistent client used to store cookies after the initial request is sent
 	httpClient *http.Client
+	// validate instructs the client to check each request for errors returned from yahoo's server
+	validate bool
 }
 
 // Price represents a single datapoint returned by the yahoo api
@@ -85,6 +87,10 @@ func (c *Client) GetSecurityDataString(ticker string, startDate, endDate time.Ti
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
+	}
+
+	if resp.StatusCode > 200 {
+		// todo: fill this in
 	}
 	return string(body), nil
 

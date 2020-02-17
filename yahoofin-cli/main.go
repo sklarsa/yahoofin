@@ -13,6 +13,9 @@ func main() {
 	tickerPtr := flag.String("ticker", "", "Ticker to pull prices for")
 	startDatePtr := flag.String("startDate", "", "Start date [YYYY-MM-DD]")
 	endDatePtr := flag.String("endDate", "", "End date [YYYY-MM-DD]")
+	validatePtr := flag.Bool("validate", false,
+		"Client validates output and returns a non=zero "+
+			"status code if the response from yahoo contains an error")
 	flag.Parse()
 
 	if *tickerPtr == "" {
