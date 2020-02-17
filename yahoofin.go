@@ -74,6 +74,25 @@ func (c *Client) makeRequest(ticker string, startDate, endDate time.Time, field 
 	return c.httpClient.Get(url)
 }
 
+func validateResponse(resp *http.Response) error {
+	if resp.StatusCode >= 300 {
+
+		se := ServerErrorRoot{}
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+
+		if err := json.Unmarshal(body, &se); err != nil {
+			// Sometimes the server returns raw text instead of json...
+			return fmt.Errorf(string(body))
+		}
+		return fmt.Errorf("%v: %v", se.Chart.Error.Code, se.Chart.Error.Description)
+	}
+
+	return nil
+}
+
 // GetSecurityDataString returns the raw response data from the yahoo endpoint.
 // This string will be CSV formatted if the request succeeds.
 // In the event of a failed request, this string will be JSON-formatted
@@ -83,21 +102,15 @@ func (c *Client) GetSecurityDataString(ticker string, startDate, endDate time.Ti
 		return "", err
 	}
 
+	if err := validateResponse(resp); err != nil {
+		return "", err
+	}
+
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}
 
-	if resp.StatusCode >= 300 {
-
-		se := ServerErrorRoot{}
-
-		if err := json.Unmarshal(body, &se); err != nil {
-			// Sometimes the server returns raw text instead of json...
-			return "", fmt.Errorf(string(body))
-		}
-		return "", fmt.Errorf("%v: %v", se.Chart.Error.Code, se.Chart.Error.Description)
-	}
 	return string(body), nil
 
 }
@@ -107,6 +120,10 @@ func (c *Client) GetSecurityData(ticker string, startDate, endDate time.Time, fi
 	prices := []*Price{}
 	resp, err := c.makeRequest(ticker, startDate, endDate, field)
 	if err != nil {
+		return prices, err
+	}
+
+	if err := validateResponse(resp); err != nil {
 		return prices, err
 	}
 
