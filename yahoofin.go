@@ -91,8 +91,10 @@ func (c *Client) GetSecurityDataString(ticker string, startDate, endDate time.Ti
 	if resp.StatusCode >= 300 {
 
 		se := ServerErrorRoot{}
+
 		if err := json.Unmarshal(body, &se); err != nil {
-			return "", err
+			// Sometimes the server returns raw text instead of json...
+			return "", fmt.Errorf(string(body))
 		}
 		return "", fmt.Errorf("%v: %v", se.Chart.Error.Code, se.Chart.Error.Description)
 	}
