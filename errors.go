@@ -1,5 +1,6 @@
 package yahoofin
 
+// ServerErrorRoot is the root object returned by yahoo's server on errors
 type ServerErrorRoot struct {
 	Chart ServerError `json:"chart"`
 }
