@@ -1,6 +1,7 @@
 package yahoofin
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
@@ -42,8 +43,6 @@ type Client struct {
 	crumb string
 	// httpClient is a persistent client used to store cookies after the initial request is sent
 	httpClient *http.Client
-	// validate instructs the client to check each request for errors returned from yahoo's server
-	validate bool
 }
 
 // Price represents a single datapoint returned by the yahoo api
@@ -89,8 +88,13 @@ func (c *Client) GetSecurityDataString(ticker string, startDate, endDate time.Ti
 		return "", err
 	}
 
-	if resp.StatusCode > 200 {
-		// todo: fill this in
+	if resp.StatusCode >= 300 {
+
+		se := ServerErrorRoot{}
+		if err := json.Unmarshal(body, &se); err != nil {
+			return "", err
+		}
+		return "", fmt.Errorf("%v: %v", se.Chart.Error.Code, se.Chart.Error.Description)
 	}
 	return string(body), nil
 
@@ -117,7 +121,7 @@ type DateTime struct {
 	time.Time
 }
 
-// UnmarshalCSV sonverts the CSV string as internal date
+// UnmarshalCSV converts the CSV string as internal date
 func (date *DateTime) UnmarshalCSV(csv string) (err error) {
 	date.Time, err = time.Parse("2006-01-02", csv)
 	if err != nil {

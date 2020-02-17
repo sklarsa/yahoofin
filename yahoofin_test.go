@@ -48,4 +48,11 @@ func TestClient(t *testing.T) {
 
 	}
 
+	// Test bad ticker
+	invalidTicker := "NotAT1cker"
+	_, err = client.GetSecurityData(invalidTicker, startDate, endDate, History)
+	if err == nil {
+		t.Error("No error for invalid ticker")
+	}
+
 }
